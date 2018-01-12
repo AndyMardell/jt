@@ -4,6 +4,7 @@ var toTime = require('to-time');
 var inquirer = require('inquirer');
 var jsonfile = require('jsonfile');
 var humanTime = require('human-time');
+var prettyMs = require('pretty-ms');
 var Client = require('node-rest-client').Client;
 client = new Client();
 
@@ -407,7 +408,7 @@ program
 
 program
 .command('list')
-.description('Finish a task')
+.description('List currently active timers')
 .action(function(options){
     var activeTimers = timers.filter(hasNotFinished)
     if(activeTimers.length == 0) {
@@ -417,6 +418,23 @@ program
     console.log('Active tasks:')
     for(var i = 0; i < activeTimers.length; i++) {
         console.log(activeTimers[i].task, '-', humanTime(new Date(activeTimers[i].start)))
+    }
+});
+
+program
+.command('log')
+.description('Show task log')
+.action(function(options){
+    var allTimers = timers.filter(hasFinished)
+    if(allTimers.length == 0) {
+        return console.log("No timers found");
+    }
+
+    console.log('Tasks you have been working on:')
+    for(var i = 0; i < allTimers.length; i++) {
+        var taskStart = new Date(allTimers[i].start),
+            taskEnd = new Date(allTimers[i].end);
+        console.log(allTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
     }
 });
 
