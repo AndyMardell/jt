@@ -11,6 +11,10 @@
   "bin": {
     "jt": "./index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/MrNorm/jt.git"
+  },
   "dependencies": {
     "commander": "^2.12.2",
     "human-time": "0.0.1",
