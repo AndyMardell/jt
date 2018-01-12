@@ -145,8 +145,12 @@ function filter(input) {
 }
 
 var hasNotFinished = function(timer) {
-        return (timer['end'] === undefined);
- }
+    return (timer['end'] === undefined);
+}
+
+var hasFinished = function(timer) {
+    return (timer['end'] !== undefined);
+}
 
 // Ensures that time matches the human readable format in the to-time module
 var validateTime = function(time) {
