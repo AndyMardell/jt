@@ -1,0 +1,24 @@
+{
+  "name": "jt",
+  "version": "0.0.1",
+  "description": "A simple time tracker for JIRA time",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Oliver Northam <oliver@sidigital.co>",
+  "license": "ISC",
+  "bin": {
+    "jt": "./index.js"
+  },
+  "dependencies": {
+    "commander": "^2.12.2",
+    "human-time": "0.0.1",
+    "inquirer": "^5.0.0",
+    "inquirer-autocomplete-prompt": "^0.12.1",
+    "jsonfile": "^4.0.0",
+    "node-rest-client": "^3.1.0",
+    "to-time": "^1.0.2",
+    "uuid": "^3.1.0"
+  }
+}
