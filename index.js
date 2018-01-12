@@ -5,6 +5,7 @@ var inquirer = require('inquirer');
 var jsonfile = require('jsonfile');
 var humanTime = require('human-time');
 var prettyMs = require('pretty-ms');
+var moment = require('moment');
 var Client = require('node-rest-client').Client;
 client = new Client();
 
@@ -150,6 +151,26 @@ var hasNotFinished = function(timer) {
 
 var hasFinished = function(timer) {
     return (timer['end'] !== undefined);
+}
+
+var endedToday = function(timer) {
+    var end = timer['end'],
+        endDate = moment(end).format('DDMMYYYY'),
+        today = moment().format('DDMMYYYY');
+    if (endDate == today) {
+        return true;
+    }
+    return false;
+}
+
+var endedYesterday = function(timer) {
+    var end = timer['end'],
+        endDate = moment(end).format('DDMMYYYY'),
+        yesterday = moment().add(-1, 'days').format('DDMMYYYY');
+    if (endDate == yesterday) {
+        return true;
+    }
+    return false;
 }
 
 // Ensures that time matches the human readable format in the to-time module
@@ -427,18 +448,49 @@ program
 
 program
 .command('log')
+.option('-t --time [time]', 'Time', /^(today|yesterday)$/i)
 .description('Show task log')
 .action(function(options){
-    var allTimers = timers.filter(hasFinished)
+    var allTimers = timers.filter(hasFinished),
+        todaysTimers = timers.filter(endedToday),
+        yesterdaysTimers = timers.filter(endedYesterday)
+        timePeriod = options.time;
     if(allTimers.length == 0) {
         return console.log("No timers found");
     }
 
-    console.log('Tasks you have been working on:')
-    for(var i = 0; i < allTimers.length; i++) {
-        var taskStart = new Date(allTimers[i].start),
-            taskEnd = new Date(allTimers[i].end);
-        console.log(allTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+    if (timePeriod == 'today')
+    {
+        if (todaysTimers.length == 0) {
+            return console.log("You haven\'t worked on anything yet");
+        }
+        console.log("Tasks you have been working on today:")
+        for(var i = 0; i < todaysTimers.length; i++) {
+            var taskStart = new Date(todaysTimers[i].start),
+            taskEnd = new Date(todaysTimers[i].end);
+            console.log(todaysTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+        }
+    }
+    else if (timePeriod == 'yesterday')
+    {
+        if (yesterdaysTimers.length == 0) {
+            return console.log("You didn\'t work on anything yesterday");
+        }
+        console.log("Tasks you were working on yesterday:")
+        for(var i = 0; i < yesterdaysTimers.length; i++) {
+            var taskStart = new Date(yesterdaysTimers[i].start),
+            taskEnd = new Date(yesterdaysTimers[i].end);
+            console.log(yesterdaysTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+        }
+    }
+    else
+    {
+        console.log("All tasks you have been working on:")
+        for(var i = 0; i < allTimers.length; i++) {
+            var taskStart = new Date(allTimers[i].start),
+                taskEnd = new Date(allTimers[i].end);
+            console.log(allTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+        }
     }
 });
 
