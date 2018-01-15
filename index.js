@@ -464,7 +464,7 @@ program
 .action(function(options){
     var allTimers = timers.filter(hasFinished),
         todaysTimers = timers.filter(startedToday),
-        yesterdaysTimers = timers.filter(endedYesterday)
+        yesterdaysTimers = timers.filter(endedYesterday),
         timePeriod = options.time,
         subTotal = 0,
         dayLength = 28800000;
