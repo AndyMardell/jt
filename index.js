@@ -455,7 +455,8 @@ program
         todaysTimers = timers.filter(endedToday),
         yesterdaysTimers = timers.filter(endedYesterday)
         timePeriod = options.time,
-        subTotal = 0;
+        subTotal = 0,
+        dayLength = 28800000;
     if(allTimers.length == 0) {
         return console.log("No timers found");
     }
@@ -474,6 +475,7 @@ program
             console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
         console.log("Total: ", prettyMs(subTotal, {verbose: true}));
+        console.log("You still need to work for", prettyMs(dayLength - subTotal, {verbose: true}));
     }
     else if (timePeriod == 'yesterday')
     {
