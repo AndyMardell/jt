@@ -153,6 +153,16 @@ var hasFinished = function(timer) {
     return (timer['end'] !== undefined);
 }
 
+var startedToday = function(timer) {
+    var start = timer['start'],
+        startDate = moment(start).format('DDMMYYYY'),
+        today = moment().format('DDMMYYYY');
+    if (startDate == today) {
+        return true;
+    }
+    return false;
+}
+
 var endedToday = function(timer) {
     var end = timer['end'],
         endDate = moment(end).format('DDMMYYYY'),
@@ -446,13 +456,14 @@ program
     }
 });
 
+
 program
 .command('log')
 .option('-t --time [time]', 'Time', /^(today|yesterday)$/i)
 .description('Show task log')
 .action(function(options){
     var allTimers = timers.filter(hasFinished),
-        todaysTimers = timers.filter(endedToday),
+        todaysTimers = timers.filter(startedToday),
         yesterdaysTimers = timers.filter(endedYesterday)
         timePeriod = options.time,
         subTotal = 0,
@@ -461,24 +472,33 @@ program
         return console.log("No timers found");
     }
 
-    if (timePeriod == 'today')
-    {
+    if (timePeriod == 'today') {
+
         if (todaysTimers.length == 0) {
             return console.log("You haven\'t worked on anything yet");
         }
         console.log("Tasks you have been working on today:")
         for(var i = 0; i < todaysTimers.length; i++) {
-            var taskStart = new Date(todaysTimers[i].start),
-                taskEnd = new Date(todaysTimers[i].end),
-                taskDuration = taskEnd - taskStart;
+
+            var taskStart = new Date(todaysTimers[i].start);
+
+            // If still in progress, mark as in progress
+            if (!todaysTimers[i].end) {
+                var taskDuration = new Date() - taskStart;
+                console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}), '<- In Progress');
+            } else {
+                var taskEnd = new Date(todaysTimers[i].end),
+                    taskDuration = taskEnd - taskStart;
+                console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
+            }
             subTotal = subTotal + taskDuration;
-            console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
+
         }
         console.log("Total: ", prettyMs(subTotal, {verbose: true}));
         console.log("You still need to work for", prettyMs(dayLength - subTotal, {verbose: true}));
-    }
-    else if (timePeriod == 'yesterday')
-    {
+
+    } else if (timePeriod == 'yesterday') {
+
         if (yesterdaysTimers.length == 0) {
             return console.log("You didn\'t work on anything yesterday");
         }
@@ -491,20 +511,30 @@ program
             console.log(yesterdaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
         console.log("Total: ", prettyMs(subTotal, {verbose: true}));
-    }
-    else
-    {
+
+    } else {
+
         console.log("All tasks you have been working on:")
         for(var i = 0; i < allTimers.length; i++) {
-            var taskStart = new Date(allTimers[i].start),
-                taskEnd = new Date(allTimers[i].end),
-                taskDuration = taskEnd - taskStart;
+
+            var taskStart = new Date(allTimers[i].start);
+
+            // If still in progress, mark as in progress
+            if (!allTimers[i].end) {
+                var taskDuration = new Date() - taskStart;
+                console.log(allTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}), '<- In Progress');
+            } else {
+                var taskEnd = new Date(allTimers[i].end),
+                    taskDuration = taskEnd - taskStart;
+                console.log(allTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
+            }
             subTotal = subTotal + taskDuration;
-            console.log(allTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
         console.log("Total: ", prettyMs(subTotal, {verbose: true}));
+
     }
 });
+
 
 program
 .command('finish')
