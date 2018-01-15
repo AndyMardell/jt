@@ -454,7 +454,8 @@ program
     var allTimers = timers.filter(hasFinished),
         todaysTimers = timers.filter(endedToday),
         yesterdaysTimers = timers.filter(endedYesterday)
-        timePeriod = options.time;
+        timePeriod = options.time,
+        subTotal = 0;
     if(allTimers.length == 0) {
         return console.log("No timers found");
     }
@@ -467,9 +468,12 @@ program
         console.log("Tasks you have been working on today:")
         for(var i = 0; i < todaysTimers.length; i++) {
             var taskStart = new Date(todaysTimers[i].start),
-            taskEnd = new Date(todaysTimers[i].end);
-            console.log(todaysTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+                taskEnd = new Date(todaysTimers[i].end),
+                taskDuration = taskEnd - taskStart;
+            subTotal = subTotal + taskDuration;
+            console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
+        console.log("Total: ", prettyMs(subTotal, {verbose: true}));
     }
     else if (timePeriod == 'yesterday')
     {
@@ -479,18 +483,24 @@ program
         console.log("Tasks you were working on yesterday:")
         for(var i = 0; i < yesterdaysTimers.length; i++) {
             var taskStart = new Date(yesterdaysTimers[i].start),
-            taskEnd = new Date(yesterdaysTimers[i].end);
-            console.log(yesterdaysTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+                taskEnd = new Date(yesterdaysTimers[i].end),
+                taskDuration = taskEnd - taskStart;
+            subTotal = subTotal + taskDuration;
+            console.log(yesterdaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
+        console.log("Total: ", prettyMs(subTotal, {verbose: true}));
     }
     else
     {
         console.log("All tasks you have been working on:")
         for(var i = 0; i < allTimers.length; i++) {
             var taskStart = new Date(allTimers[i].start),
-                taskEnd = new Date(allTimers[i].end);
-            console.log(allTimers[i].task, '-', prettyMs(taskEnd - taskStart, {verbose: true}));
+                taskEnd = new Date(allTimers[i].end),
+                taskDuration = taskEnd - taskStart;
+            subTotal = subTotal + taskDuration;
+            console.log(allTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
+        console.log("Total: ", prettyMs(subTotal, {verbose: true}));
     }
 });
 
