@@ -37,7 +37,7 @@ var searchArgs = {
         maxResults: 100,
         startAt: 0
     }
-    
+
 };
 
 var startQuestions = [
@@ -74,7 +74,7 @@ var finishQuestions = [
             for(var i = 0; filteredTimers.length > i; i++) {
                 var row = filteredTimers[i];
                 tidyTimers.push({
-                    name: row.task + ' - Started ' + humanTime(new Date(row.start)), 
+                    name: row.task + ' - Started ' + humanTime(new Date(row.start)),
                     value: row.id
                 });
             }
@@ -128,12 +128,12 @@ var searchTasks = function(input) {
         if(input !== null) {
             search = tasks.filter(filter(input));
         }
-        
+
         search.push({
             value: '.jt-custom',
             name: 'Custom task..'
         });
-        
+
         resolve(search);
     });
 }
@@ -205,7 +205,7 @@ var checkFiles = function() {
             } else {
                 tasks = data;
             }
-            
+
             return loadFile(timersFile)
         })
         .then(function(data) {
@@ -237,7 +237,7 @@ var loadFile = function(file) {
         jsonfile.readFile(fileToRead, function(err, obj) {
             if(err) {
                 jsonfile.writeFile(fileToRead, [], { flag: "w+" }, function(err, obj) {
-                    if(err) {            
+                    if(err) {
                         return error(err);
                     } else {
                         return resolve(false);
@@ -254,7 +254,7 @@ var writeToFile = function(file, data) {
     return new Promise(function(resolve, error) {
         var fileToRead = [os.homedir(), file].join('/');
         jsonfile.writeFile(fileToRead, data, { flag: "w+" }, function(err, obj) {
-            if(err) {            
+            if(err) {
                 return error(err);
             } else {
                 return resolve();
@@ -307,9 +307,9 @@ var runJiraSetup = function() {
                 },
                 headers: {
                     "Content-Type": "application/json"
-                } 
+                }
             };
-            
+
             client.post(["https://", credentials.url, "/rest/auth/1/session"].join(''), loginArgs, function(data, response){
                 if (response.statusCode == 200) {
                     console.log("Logged in! Storing session cookie for future requests.")
@@ -331,7 +331,7 @@ var runJiraSetup = function() {
 }
 
 var getTasks = function(startFrom) {
-    
+
     searchArgs.data.startAt = startFrom;
 
     // Make the request return the search results, passing the header information including the cookie.
@@ -339,8 +339,8 @@ var getTasks = function(startFrom) {
         client.post("https://sidigital.atlassian.net/rest/api/2/search", searchArgs, function(searchResult, response) {
             if(response.statusCode == 200) {
                 for(var i = 0; i < searchResult.issues.length; i++) {
-                    tasks.push({ 
-                        value: searchResult.issues[i].key, 
+                    tasks.push({
+                        value: searchResult.issues[i].key,
                         name: [searchResult.issues[i].key, searchResult.issues[i].fields.summary].join(' - ')
                     });
                 }
@@ -371,7 +371,7 @@ var syncTasks = function() {
             }
         });
     })
-    
+
 }
 
 
@@ -381,7 +381,7 @@ var runSetup = function() {
         console.log("Welcome to jt! A handy little CLI timer with JIRA integration")
         console.log("To get started, lets go through a few setup questions...")
         inquirer.prompt(newSetupQuestions).then(resolve);
-       
+
     })
     .then(function(answers) {
         if(answers !== undefined && answers.useJira == true) {
@@ -417,7 +417,7 @@ program
         return new Promise(function(resolve) {
             if(answers.task == '.jt-custom') {
                 return inquirer.prompt(customTaskQuestions).then(function(customAnswers) {
-                    answers.task = customAnswers.name 
+                    answers.task = customAnswers.name
                     resolve(answers);
                 });
             } else {
@@ -463,8 +463,6 @@ program
 .description('Show task log')
 .action(function(options){
     var allTimers = timers.filter(hasFinished),
-        todaysTimers = timers.filter(startedToday),
-        yesterdaysTimers = timers.filter(endedYesterday),
         timePeriod = options.time,
         subTotal = 0,
         dayLength = 28800000;
@@ -472,45 +470,65 @@ program
         return console.log("No timers found");
     }
 
-    if (timePeriod == 'today') {
+    if (timePeriod == 'today' || timePeriod == 'yesterday') {
 
-        if (todaysTimers.length == 0) {
-            return console.log("You haven\'t worked on anything yet");
+        if (timePeriod == 'today') {
+            var periodTimers = timers.filter(startedToday);
+        } else {
+            var periodTimers = timers.filter(endedYesterday);
         }
-        console.log("Tasks you have been working on today:")
-        for(var i = 0; i < todaysTimers.length; i++) {
 
-            var taskStart = new Date(todaysTimers[i].start);
-
-            // If still in progress, mark as in progress
-            if (!todaysTimers[i].end) {
-                var taskDuration = new Date() - taskStart;
-                console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}), '<- In Progress');
+        if (periodTimers.length == 0) {
+            if (timePeriod == 'today') {
+                return console.log("You haven\'t worked on anything yet");
             } else {
-                var taskEnd = new Date(todaysTimers[i].end),
-                    taskDuration = taskEnd - taskStart;
-                console.log(todaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
+                return console.log("You didn\'t work on anything yesterday");
             }
-            subTotal = subTotal + taskDuration;
-
         }
-        console.log("Total: ", prettyMs(subTotal, {verbose: true}));
-        console.log("You still need to work for", prettyMs(dayLength - subTotal, {verbose: true}));
+        var timersObject = {};
 
-    } else if (timePeriod == 'yesterday') {
-
-        if (yesterdaysTimers.length == 0) {
-            return console.log("You didn\'t work on anything yesterday");
+        if (timePeriod == 'today') {
+            console.log("Tasks you have been working on today:");
+        } else {
+            console.log("Tasks you were working on yesterday:");
         }
-        console.log("Tasks you were working on yesterday:")
-        for(var i = 0; i < yesterdaysTimers.length; i++) {
-            var taskStart = new Date(yesterdaysTimers[i].start),
-                taskEnd = new Date(yesterdaysTimers[i].end),
+
+        // Add times to object
+        for(var i = 0; i < periodTimers.length; i++) {
+
+            var taskStart = moment(periodTimers[i].start),
+                taskEnd = moment(periodTimers[i].end),
+                now = moment(),
+                taskDuration;
+
+            if (taskEnd) {
                 taskDuration = taskEnd - taskStart;
+            } else {
+                taskDuration = now - taskStart;
+            }
+
+            // If task already exists
+            if (timersObject[periodTimers[i].task]) {
+                timersObject[periodTimers[i].task] = timersObject[periodTimers[i].task] + taskDuration;
+            } else {
+                timersObject[periodTimers[i].task] = taskDuration;
+            }
+
             subTotal = subTotal + taskDuration;
-            console.log(yesterdaysTimers[i].task, '-', prettyMs(taskDuration, {verbose: true}));
         }
+
+        // Print times from object
+        for (var key in timersObject) {
+            if (timersObject.hasOwnProperty(key)) {
+                console.log(key, '-', prettyMs(timersObject[key], {verbose: true}));
+            }
+        }
+
+        // Print totals
         console.log("Total: ", prettyMs(subTotal, {verbose: true}));
+        if (timePeriod == 'today') {
+            console.log("You still need to work for", prettyMs(dayLength - subTotal, {verbose: true}));
+        }
 
     } else {
 
@@ -566,7 +584,7 @@ checkFiles()
             resolve();
         }
     })
-    
+
 })
 .then(function() {
     // Handle CLI
@@ -576,4 +594,3 @@ checkFiles()
         program.outputHelp();
     }
 })
-
